@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Meta Tags para um Site Permanente -->
+    <title>Calculadora de Precificação — Gabriel Giovany Cavalieri</title>
+    <meta name="description" content="Ferramenta profissional para cálculo de orçamentos de fotografia e vídeo baseada em custos reais.">
+    
+    <!-- Open Graph (Partilha em Redes Sociais) -->
+    <meta property="og:title" content="Calculadora de Precificação — Fotografia & Vídeo">
+    <meta property="og:description" content="Calcula os teus orçamentos de forma profissional e descobre a tua margem de lucro real.">
+    <meta property="og:type" content="website">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
+
+        .tipo-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tipo-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tipo-btn.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .market-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .market-bar-range {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            position: absolute;
+        }
+
+        .market-bar-indicator {
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            border: 3px solid #0f0f0f;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .status-low { color: #ff8787; }
+        .status-ok { color: #63e6be; }
+        .status-high { color: #ffd43b; }
+
+        @keyframes number-bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .updating {
+            animation: number-bump 0.2s ease-out;
+        }
+
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div class="flex-grow p-4 md:p-8 lg:p-12">
+        <div class="max-w-5xl mx-auto">
+            
+            <!-- Cabeçalho Principal -->
+            <header class="text-center mb-16">
+                <div class="inline-block px-4 py-1 rounded-full border border-white/10 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-6">
+                    GABRIEL GIOVANY CAVALIERI
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 tracking-tight">Calculadora de<br><span class="text-gray-500">Precificação</span></h1>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
+                    Define os teus valores com base em dados reais. Ajusta os parâmetros abaixo para encontrar o equilíbrio entre lucro e competitividade.
+                </p>
+            </header>
+
+            <!-- Grelha de Conteúdo -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                
+                <!-- Painel de Configuração -->
+                <div class="lg:col-span-7 space-y-10">
+                    
+                    <!-- Passo 1: Nicho -->
+                    <section>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center text-xs font-bold">1</span>
+                            <h3 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Nicho de Mercado</h3>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="tipo-grid">
+                            <!-- Gerado dinamicamente via JS -->
+                        </div>
+                        <div class="mt-4 p-4 rounded-xl bg-white/5 border border-white/5 min-h-[60px] flex items-center">
+                            <p id="tipo-hint" class="text-sm text-gray-400 italic"></p>
+                        </div>
+                    </section>
+
+                    <!-- Passo 2: Variáveis -->
+                    <section class="space-y-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center text-xs font-bold">2</span>
+                            <h3 class="text-sm font-semibold uppercase tracking-widest text-gray-400">Variáveis do Projeto</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="glass-card p-6">
+                                <div class="flex justify-between mb-4">
+                                    <span class="text-xs font-bold uppercase tracking-tighter text-gray-500">Horas de Ensaio</span>
+                                    <span class="text-xl font-bold" id="horas-out">0</span>
+                                </div>
+                                <input type="range" id="horas" min="1" max="15" step="0.5" value="2" oninput="upd()">
+                            </div>
+
+                            <div class="glass-card p-6">
+                                <div class="flex justify-between mb-4">
+                                    <span class="text-xs font-bold uppercase tracking-tighter text-gray-500">Horas de Edição</span>
+                                    <span class="text-xl font-bold" id="edicao-out">0</span>
+                                </div>
+                                <input type="range" id="edicao" min="0" max="50" step="1" value="4" oninput="upd()">
+                            </div>
+
+                            <div class="glass-card p-6">
+                                <div class="flex justify-between mb-4">
+                                    <span class="text-xs font-bold uppercase tracking-tighter text-gray-500">Deslocação (KM)</span>
+                                    <span class="text-xl font-bold" id="km-out">0</span>
+                                </div>
+                                <input type="range" id="km" min="0" max="300" step="5" value="20" oninput="upd()">
+                            </div>
+
+                            <div class="glass-card p-6">
+                                <div class="flex justify-between mb-4">
+                                    <span class="text-xs font-bold uppercase tracking-tighter text-gray-500">Margem de Lucro</span>
+                                    <span class="text-xl font-bold text-green-400" id="margem-out">0</span>
+                                </div>
+                                <input type="range" id="margem" min="5" max="150" step="5" value="35" oninput="upd()">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Painel de Resultados -->
+                <div class="lg:col-span-5">
+                    <div class="sticky top-8 space-y-6">
+                        
+                        <!-- Card de Preço -->
+                        <div class="glass-card p-10 border border-white/20 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"></path></svg>
+                            </div>
+                            
+                            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-8 text-center">Orçamento Sugerido</h3>
+                            
+                            <div class="text-center mb-10">
+                                <div class="text-7xl font-bold mb-2 tracking-tighter tracking-tight" id="r-preco">R$ 0</div>
+                                <div class="text-xs text-gray-500 uppercase tracking-widest font-semibold">Preço Final Recomendado</div>
+                            </div>
+
+                            <div class="space-y-5 pt-8 border-t border-white/10">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-400">Custos Operacionais</span>
+                                    <span id="r-custo" class="text-md font-medium text-gray-200 tracking-tight">R$ 0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-400">Lucro Líquido Esperado</span>
+                                    <span id="r-lucro" class="text-md font-bold text-green-400 tracking-tight">R$ 0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card de Mercado -->
+                        <div class="glass-card p-8">
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-6 flex justify-between items-center">
+                                Posicionamento de Mercado
+                                <span class="px-2 py-1 bg-white/5 rounded text-[8px]">Média 2026</span>
+                            </h4>
+                            
+                            <div class="flex justify-between text-[11px] text-gray-400 mb-4 font-mono">
+                                <span id="m-min">R$ 0</span>
+                                <span id="m-max">R$ 0</span>
+                            </div>
+                            
+                            <div class="market-bar-track mb-6">
+                                <div class="market-bar-range" id="bar-range"></div>
+                                <div class="market-bar-indicator" id="bar-indicator"></div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div id="m-status" class="text-md font-bold mb-1 transition-colors duration-300">Analisando dados...</div>
+                                <p id="m-label" class="text-xs text-gray-500 leading-relaxed"></p>
+                            </div>
+                        </div>
+
+                        <!-- Dicas Rápidas -->
+                        <div class="p-4 text-[10px] text-gray-600 uppercase tracking-widest font-bold text-center">
+                            Ajusta os sliders para simular diferentes cenários
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé Permanente -->
+    <footer class="py-12 mt-12">
+        <div class="max-w-5xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left">
+                <div class="text-xl font-bold tracking-tighter mb-1 uppercase">Gabriel Giovany Cavalieri</div>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Desenvolvido para Profissionais de Imagem</p>
+            </div>
+            
+            <div class="text-[10px] text-gray-600 font-mono uppercase tracking-widest">
+                © 2026 • Todos os direitos reservados
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const config = {
+            'Família': { valorHora: 140, custoKm: 0.90, margem: 35, mercMin: 700, mercMax: 2000, hint: 'Ideal para sessões lifestyle, batizados e pequenos grupos familiares.' },
+            'Newborn': { valorHora: 160, custoKm: 0.90, margem: 40, mercMin: 800, mercMax: 2500, hint: 'Sessões que exigem alta especialização e cuidados extras com o bebé.' },
+            'Gestante': { valorHora: 145, custoKm: 0.90, margem: 35, mercMin: 600, mercMax: 1800, hint: 'Foco na valorização da maternidade e iluminação suave.' },
+            'Pré Wedding': { valorHora: 170, custoKm: 0.90, margem: 40, mercMin: 1200, mercMax: 3500, hint: 'Ensaio romântico de casal em locações externas.' },
+            'Casamento Civil': { valorHora: 165, custoKm: 0.90, margem: 38, mercMin: 1000, mercMax: 2500, hint: 'Cobertura documental rápida em cartório ou local pequeno.' },
+            'Casamento Tradicional': { valorHora: 220, custoKm: 1.10, margem: 45, mercMin: 4500, mercMax: 12000, hint: 'A maior responsabilidade. Cobertura completa de longo período.' },
+            'Corporativo': { valorHora: 190, custoKm: 1.00, margem: 45, mercMin: 1200, mercMax: 4500, hint: 'Retratos executivos e eventos empresariais B2B.' },
+            'Moda / Editorial': { valorHora: 200, custoKm: 0.90, margem: 40, mercMin: 1500, mercMax: 5000, hint: 'Produções com modelos, stylists e iluminação complexa.' },
+            'Eventos / Social': { valorHora: 155, custoKm: 0.90, margem: 35, mercMin: 900, mercMax: 3000, hint: 'Festas de aniversário, galas e eventos dinâmicos.' }
+        };
+
+        let tipoAtual = 'Família';
+
+        function init() {
+            const grid = document.getElementById('tipo-grid');
+            Object.keys(config).forEach(key => {
+                const btn = document.createElement('button');
+                btn.className = `tipo-btn py-4 px-2 rounded-2xl text-[11px] uppercase tracking-widest font-bold ${key === tipoAtual ? 'active' : ''}`;
+                btn.textContent = key;
+                btn.onclick = () => setTipo(key, btn);
+                grid.appendChild(btn);
+            });
+            upd();
+        }
+
+        function setTipo(tipo, btn) {
+            tipoAtual = tipo;
+            document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.getElementById('tipo-hint').textContent = config[tipo].hint;
+            document.getElementById('margem').value = config[tipo].margem;
+            
+            upd();
+        }
+
+        function formatMoeda(v) {
+            return 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+        }
+
+        function upd() {
+            const hEnsaio = parseFloat(document.getElementById('horas').value);
+            const hEdicao = parseFloat(document.getElementById('edicao').value);
+            const dist = parseFloat(document.getElementById('km').value);
+            const margemUser = parseFloat(document.getElementById('margem').value);
+
+            // Atualização de Interface
+            document.getElementById('horas-out').textContent = hEnsaio + 'h';
+            document.getElementById('edicao-out').textContent = hEdicao + 'h';
+            document.getElementById('km-out').textContent = dist + ' km';
+            document.getElementById('margem-out').textContent = margemUser + '%';
+
+            const c = config[tipoAtual];
+
+            // Core Logic
+            const maoDeObra = (hEnsaio + hEdicao) * c.valorHora;
+            const custoDesloc = dist * c.custoKm;
+            const custoTotal = maoDeObra + custoDesloc;
+            const lucro = custoTotal * (margemUser / 100);
+            const precoSugerido = custoTotal + lucro;
+
+            // Animação e Valores
+            const resultElements = ['r-preco', 'r-custo', 'r-lucro'];
+            resultElements.forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('updating');
+                void el.offsetWidth;
+                el.classList.add('updating');
+            });
+
+            document.getElementById('r-preco').textContent = formatMoeda(precoSugerido);
+            document.getElementById('r-custo').textContent = formatMoeda(custoTotal);
+            document.getElementById('r-lucro').textContent = formatMoeda(lucro);
+
+            // Lógica do Comparador de Mercado
+            document.getElementById('m-min').textContent = formatMoeda(c.mercMin);
+            document.getElementById('m-max').textContent = formatMoeda(c.mercMax);
+
+            const displayMin = c.mercMin * 0.4;
+            const displayMax = c.mercMax * 1.6;
+            const totalWidth = displayMax - displayMin;
+
+            const rangeBar = document.getElementById('bar-range');
+            const startPct = ((c.mercMin - displayMin) / totalWidth) * 100;
+            const widthPct = ((c.mercMax - c.mercMin) / totalWidth) * 100;
+            rangeBar.style.left = startPct + '%';
+            rangeBar.style.width = widthPct + '%';
+
+            const indicator = document.getElementById('bar-indicator');
+            let posPct = ((precoSugerido - displayMin) / totalWidth) * 100;
+            posPct = Math.max(2, Math.min(98, posPct));
+            indicator.style.left = posPct + '%';
+
+            const status = document.getElementById('m-status');
+            const label = document.getElementById('m-label');
+
+            if (precoSugerido < c.mercMin * 0.9) {
+                status.textContent = 'Abaixo da Média';
+                status.className = 'text-md font-bold mb-1 status-low';
+                label.textContent = 'Este preço pode comprometer a sustentabilidade do teu negócio a longo prazo.';
+            } else if (precoSugerido > c.mercMax * 1.1) {
+                status.textContent = 'Posicionamento Premium';
+                status.className = 'text-md font-bold mb-1 status-high';
+                label.textContent = 'Valor acima da média nacional. Garante que o teu portfólio justifica este investimento.';
+            } else {
+                status.textContent = 'Preço Competitivo';
+                status.className = 'text-md font-bold mb-1 status-ok';
+                label.textContent = 'O teu orçamento está alinhado com as práticas de mercado para este nicho.';
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
